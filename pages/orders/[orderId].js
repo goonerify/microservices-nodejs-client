@@ -1,8 +1,17 @@
 import { useEffect, useState } from "react";
 import StripeCheckout from "react-stripe-checkout";
+import useRequest from "../../hooks/use-request";
 
 const OrderShow = ({ order, currentUser }) => {
   const [timeLeft, setTimeLeft] = useState(0);
+  const { doRequest, errors } = useRequest({
+    url: "/api/payments",
+    method: "post",
+    body: {
+      orderId: order.id,
+    },
+    onSuccess: (payment) => console.log(payment),
+  });
 
   useEffect(
     () => {
@@ -34,11 +43,12 @@ const OrderShow = ({ order, currentUser }) => {
       Time left to pay: {timeLeft} seconds
       {/* look at nextjs docs for how to set this stripeKey as an env with kubernetes */}
       <StripeCheckout
-        token={(token) => console.log(token)}
+        token={({ id }) => doRequest({ token: id })}
         stripeKey="pk_test_51If4DQGmbPFPG9W4yo5Hz6rcHkUBxMfo6de7EoKu0LaX2IZAZZh3DGQyjTN22K3rTAflHopprHYn4ZjCWqRNkSHK00alpwtLAA"
         amount={order.ticket.price * 100}
         email={currentUser.email}
       />
+      {errors}
     </div>
   );
 };
